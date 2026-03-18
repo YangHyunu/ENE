@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAGA — AI 에이전트 서사 RP 프록시</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #21262d;
+  --bg4: #30363d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --cached: #39d0c8;
+  --uncached: #f0883e;
+  --bp1: #a371f7;
+  --bp2: #58a6ff;
+  --bp3: #3fb950;
+  --accent: #f78166;
+  --warn: #d29922;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Pretendard', -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-logo {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cached);
+  letter-spacing: -0.5px;
+}
+.header-sub {
+  color: var(--text2);
+  font-size: 12px;
+}
+.header-badges {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+.badge-green { color: var(--bp3); border-color: var(--bp3); }
+.badge-blue  { color: var(--bp2); border-color: var(--bp2); }
+.badge-orange { color: var(--uncached); border-color: var(--uncached); }
+
+/* ── TABS ── */
+.tabs {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  padding: 0 24px;
+  gap: 0;
+}
+.tab {
+  padding: 12px 18px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  color: var(--cached);
+  border-bottom-color: var(--cached);
+}
+
+/* ── CONTENT ── */
+.content { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.section-sub {
+  color: var(--text2);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+/* ── FLOW DIAGRAM ── */
+.flow-container {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.flow-header {
+  background: var(--bg3);
+  padding: 12px 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.flow-dot { width: 10px; height: 10px; border-radius: 50%; }
+.flow-body { padding: 20px; }
+
+.flow-block {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 8px 0;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+.flow-block:hover {
+  border-color: var(--cached);
+  background: #161b22;
+}
+.flow-block.active {
+  border-color: var(--cached);
+  background: #0d1117;
+}
+.flow-block-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.flow-step-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--cached);
+  border-radius: 4px;
+  padding: 1px 7px;
+  min-width: 28px;
+  text-align: center;
+}
+.flow-step-num.bp1 { background: var(--bp1); }
+.flow-step-num.bp2 { background: var(--bp2); }
+.flow-step-num.bp3 { background: var(--bp3); }
+.flow-step-num.orange { background: var(--uncached); }
+.flow-block-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.flow-block-sub {
+  font-size: 12px;
+  color: var(--text2);
+  margin-left: auto;
+  font-family: var(--mono);
+}
+.flow-detail {
+  display: none;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.7;
+}
+.flow-block.active .flow-detail { display: block; }
+.flow-arrow {
+  text-align: center;
+  color: var(--text3);
+  font-size: 18px;
+  line-height: 1;
+  margin: 2px 0;
+}
+.flow-external {
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 12px 18px;
+  margin: 8px 0;
+  color: var(--text2);
+  font-size: 13px;
+}
+.flow-external-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 4px;
+}
+.flow-async-note {
+  background: #1c2128;
+  border: 1px solid #3d444d;
+  border-left: 3px solid var(--warn);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--warn);
+  margin-top: 6px;
+}
+
+/* ── CODE BLOCK ── */
+pre, .code-block {
+  background: #010409;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.hl-cached { color: var(--cached); font-weight: 600; }
+.hl-uncached { color: var(--uncached); }
+.hl-bp1 { color: var(--bp1); }
+.hl-bp2 { color: var(--bp2); }
+.hl-bp3 { color: var(--bp3); }
+.hl-comment { color: var(--text3); font-style: italic; }
+.hl-dim { color: #484f58; }
+.hl-warn { color: var(--warn); }
+
+/* ── GRID ── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+@media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ── CARD ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+}
+.card-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-body {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.7;
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.callout-info { background: #122b4a; border-left: 3px solid var(--bp2); color: #79c0ff; }
+.callout-success { background: #0d2e1a; border-left: 3px solid var(--bp3); color: #56d364; }
+.callout-warn { background: #2b2005; border-left: 3px solid var(--warn); color: #e3b341; }
+.callout-err { background: #2d0f0f; border-left: 3px solid #f85149; color: #ff7b72; }
+
+/* ── TABLE ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: var(--mono);
+  margin: 12px 0;
+}
+th {
+  background: var(--bg3);
+  color: var(--text2);
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 12px;
+}
+td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #21262d;
+  color: var(--text);
+}
+tr:hover td { background: #161b22; }
+
+/* ── BAR CHART ── */
+.chart-container {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.chart-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text2);
+}
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+.chart-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+}
+.chart-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.chart-bars {
+  flex: 1;
+  display: flex;
+  height: 14px;
+  gap: 1px;
+  align-items: center;
+}
+.bar {
+  height: 100%;
+  border-radius: 2px;
+  min-width: 1px;
+  transition: opacity 0.2s;
+}
+.bar:hover { opacity: 0.8; }
+.bar-cached { background: var(--cached); }
+.bar-create { background: var(--uncached); }
+.bar-zero { background: #f85149; }
+.chart-val {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+/* ── SCRIPT PANEL ── */
+.script-step {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+.script-step-header {
+  background: var(--bg3);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.script-step-header:hover { background: var(--bg4); }
+.script-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--cached);
+  color: var(--bg);
+  border-radius: 4px;
+  padding: 1px 8px;
+}
+.script-step-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.script-time {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+.script-step-body {
+  padding: 16px;
+  display: none;
+  border-top: 1px solid var(--border);
+}
+.script-step.open .script-step-body { display: block; }
+.script-quote {
+  background: #010409;
+  border-left: 3px solid var(--cached);
+  border-radius: 0 4px 4px 0;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text);
+  margin: 8px 0;
+  font-style: italic;
+}
+.script-note {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* ── ANIMATOR ── */
+.anim-container {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.anim-stage {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.anim-turn {
+  min-width: 200px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 12px;
+  transition: border-color 0.3s;
+}
+.anim-turn.highlighted { border-color: var(--cached); }
+.anim-turn-title {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.anim-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 3px 0;
+}
+.anim-label { color: var(--text3); font-size: 11px; min-width: 65px; }
+.anim-val { font-family: var(--mono); font-size: 11px; }
+.val-cached { color: var(--cached); }
+.val-create { color: var(--uncached); }
+.val-miss { color: #f85149; }
+
+.anim-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--mono);
+  transition: background 0.15s, border-color 0.15s;
+}
+.anim-btn:hover { background: var(--bg4); border-color: var(--cached); }
+.anim-controls { display: flex; gap: 8px; align-items: center; }
+.anim-desc {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 8px;
+  min-height: 36px;
+}
+
+/* ── PROMPT STRUCTURE ── */
+.prompt-struct {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.ps-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 1px 0;
+}
+.ps-bracket {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 4px 0 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.ps-cached-bg { background: #0d2e2e; color: var(--cached); border-left: 3px solid var(--cached); }
+.ps-uncached-bg { background: #2b1800; color: var(--uncached); border-left: 3px solid var(--uncached); }
+.ps-body {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 0 4px 4px 0;
+}
+.ps-cached-body { background: #0a1f1f; }
+.ps-uncached-body { background: #1a1000; }
+.ps-role {
+  font-size: 10px;
+  color: var(--text3);
+  margin-right: 6px;
+}
+.ps-desc { color: var(--text2); }
+.ps-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.ps-bp1 { background: #2d1f47; color: var(--bp1); }
+.ps-bp2 { background: #1a2840; color: var(--bp2); }
+.ps-bp3 { background: #0d2e1a; color: var(--bp3); }
+.ps-sep {
+  border-top: 1px dashed var(--border);
+  margin: 6px 0;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+}
+
+/* ── SNAPSHOT TABS ── */
+.snap-tabs { display: flex; gap: 0; margin-bottom: 0; }
+.snap-tab {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-family: var(--mono);
+  cursor: pointer;
+  color: var(--text2);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  transition: color 0.15s;
+}
+.snap-tab.active { background: var(--bg2); color: var(--cached); }
+.snap-content {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 0 6px 6px 6px;
+  padding: 16px;
+  min-height: 200px;
+  font-size: 13px;
+}
+.snap-panel { display: none; }
+.snap-panel.active { display: block; }
+
+/* ── INLINE HELPERS ── */
+.mono { font-family: var(--mono); }
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 3px;
+  margin: 1px;
+}
+.tag-cached { background: #0d2e2e; color: var(--cached); }
+.tag-miss { background: #2b1800; color: var(--uncached); }
+.tag-bp1 { background: #2d1f47; color: var(--bp1); }
+.tag-bp2 { background: #1a2840; color: var(--bp2); }
+.tag-bp3 { background: #0d2e1a; color: var(--bp3); }
+
+h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+h4 { font-size: 13px; font-weight: 600; margin: 14px 0 6px; color: var(--text2); }
+p { margin: 6px 0; color: var(--text2); font-size: 13px; }
+ul, ol { margin: 6px 0 6px 18px; color: var(--text2); font-size: 13px; }
+li { margin: 3px 0; }
+strong { color: var(--text); font-weight: 600; }
+hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-logo">SAGA</div>
+    <div class="header-sub">AI Agent Narrative RP Proxy — 면접 발표자료 v2</div>
+  </div>
+  <div class="header-badges">
+    <span class="badge badge-green">캐시 히트율 85~90%</span>
+    <span class="badge badge-blue">리버스 프록시</span>
+    <span class="badge badge-orange">3-BP 캐싱</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">① 전체 워크플로우</div>
+  <div class="tab" onclick="switchTab(1)">② SystemStabilizer</div>
+  <div class="tab" onclick="switchTab(2)">③ 3-BP 캐싱 구조</div>
+  <div class="tab" onclick="switchTab(3)">④ Sub-B + Curator</div>
+  <div class="tab" onclick="switchTab(4)">⑤ 서사 시뮬레이터</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ TAB 1 ═══ -->
+<div class="content">
+<div class="tab-panel active" id="panel-0">
+  <div class="section-title">SAGA 전체 워크플로우</div>
+  <div class="section-sub">각 단계를 클릭하면 상세 설명이 펼쳐집니다.</div>
+
+  <div class="flow-container">
+    <div class="flow-header">
+      <div class="flow-dot" style="background:#f85149"></div>
+      <div class="flow-dot" style="background:#e3b341"></div>
+      <div class="flow-dot" style="background:#3fb950"></div>
+      <span style="margin-left:4px">RisuAI → SAGA → Claude API</span>
+    </div>
+    <div class="flow-body">
+
+      <!-- External: RisuAI -->
+      <div class="flow-external">
+        <div class="flow-external-label">EXTERNAL — RisuAI (프론트엔드)</div>
+        POST /v1/chat/completions<br>
+        <span class="hl-comment">[system + Lorebook] + [대화 히스토리] + [유저 입력]</span>
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <!-- SAGA wrapper start -->
+      <div style="border:1px solid var(--cached);border-radius:8px;padding:4px 8px 12px;position:relative;">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--cached);padding:4px 8px 10px;letter-spacing:1px;">SAGA REVERSE PROXY</div>
+
+        <!-- Step 1 -->
+        <div class="flow-block" onclick="toggleFlow(this)">
+          <div class="flow-block-header">
+            <span class="flow-step-num">①</span>
+            <span class="flow-block-title">SystemStabilizer</span>
+            <span class="flow-block-sub">system_stabilizer.py</span>
+          </div>
+          <div class="flow-detail">
+            <strong>문제:</strong> RisuAI가 매 턴 Lorebook을 system에 주입 → system 변경 → Anthropic prefix-based 캐시 전체 무효화<br><br>
+            <strong>해결책:</strong><br>
+            1. 첫 턴: 현재 system을 <span class="tag tag-bp1">canonical</span>로 저장 (SQLite world_state KV)<br>
+            2. 이후 턴: MD5 해시 비교 → 변경 감지<br>
+            3. 변경됐으면: paragraph-level diff → <span class="tag tag-miss">lorebook_delta</span> 추출<br>
+            4. system을 canonical로 복원 → 캐시 prefix 안정화<br>
+            5. delta는 마지막 user 메시지로 이동 (캐시 경계 밖)<br><br>
+            <strong>캐릭터 교체 감지:</strong> Jaccard 유사도 &lt; 0.30 → canonical 교체 (완전히 다른 캐릭터로 전환 시)
+          </div>
+        </div>
+
+        <div class="flow-arrow">↓</div>
+
+        <!-- Step 2 -->
+        <div class="flow-block" onclick="toggleFlow(this)">
+          <div class="flow-block-header">
+            <span class="flow-step-num">②</span>
+            <span class="flow-block-title">ContextBuilder (Sub-A)</span>
+            <span class="flow-block-sub">agents/context_builder.py</span>
+          </div>
+          <div class="flow-detail">
+            <strong>목표:</strong> LLM 호출 없이 ~35ms 내에 동적 컨텍스트 조립<br><br>
+            <strong>2-tier 조회:</strong><br>
+            • <span class="tag tag-cached">md_prefix</span> ← stable_prefix.md (md_cache, ~5ms, Curator가 관리)<br>
+            • <span class="tag tag-miss">dynamic_suffix</span> ← 에피소드 + 라이브 상태 + 로어 (~30ms)<br><br>
+            <strong>에피소드 검색 — RRF 랭킹:</strong><br>
+            세 소스를 병렬 조회 후 <code>score += weight / (k + rank + 1)</code> 합산<br>
+            &nbsp;&nbsp;• recent (최근성, weight=1.2)<br>
+            &nbsp;&nbsp;• important (중요도≥40, weight=1.0)<br>
+            &nbsp;&nbsp;• similar (의미적 유사도, weight=0.8)<br><br>
+            <strong>토큰 버짓:</strong> 2000토큰 내에서 live_state → episodes → lore 순으로 삽입
+          </div>
+        </div>
+
+        <div class="flow-arrow">↓</div>
+
+        <!-- Step 3 -->
+        <div class="flow-block" onclick="toggleFlow(this)">
+          <div class="flow-block-header">
+            <span class="flow-step-num">③</span>
+            <span class="flow-block-title">프롬프트 조립 + 3-BP 캐시 마킹</span>
+            <span class="flow-block-sub">server.py → _build_cacheable_messages()</span>
+          </div>
+          <div class="flow-detail">
+            <div class="prompt-struct">
+              <div class="ps-row">
+                <div class="ps-bracket ps-cached-bg">CACHED</div>
+                <div class="ps-body ps-cached-body">
+                  <span class="ps-role">System</span><span class="ps-desc">canonical system prompt</span>
+                  <span class="ps-tag ps-bp1">BP1 TTL 1h</span>
+                </div>
+              </div>
+              <div class="ps-row">
+                <div class="ps-bracket ps-cached-bg">CACHED</div>
+                <div class="ps-body ps-cached-body">
+                  <span class="ps-role">User/Asst…</span><span class="ps-desc">대화 히스토리</span>
+                </div>
+              </div>
+              <div class="ps-row">
+                <div class="ps-bracket ps-cached-bg">CACHED</div>
+                <div class="ps-body ps-cached-body">
+                  <span class="ps-role">Assistant</span><span class="ps-desc">중간 응답</span>
+                  <span class="ps-tag ps-bp2">BP2</span>
+                </div>
+              </div>
+              <div class="ps-row">
+                <div class="ps-bracket ps-cached-bg">CACHED</div>
+                <div class="ps-body ps-cached-body">
+                  <span class="ps-role">User/Asst</span><span class="ps-desc">최근 교환</span>
+                </div>
+              </div>
+              <div class="ps-row">
+                <div class="ps-bracket ps-cached-bg">CACHED</div>
+                <div class="ps-body ps-cached-body">
+                  <span class="ps-role">Assistant</span><span class="ps-desc">직전 응답</span>
+                  <span class="ps-tag ps-bp3">BP3</span>
+                </div>
+              </div>
+              <div class="ps-sep">─── 캐시 경계 (이 아래는 매 턴 새로 씀) ───</div>
+              <div class="ps-row">
+                <div class="ps-bracket ps-uncached-bg">NEW</div>
+                <div class="ps-body ps-uncached-body">
+                  <span class="ps-role">User</span><span class="ps-desc">md_prefix + lorebook_delta + dynamic_suffix + "실제 입력"</span>
+                </div>
+              </div>
+            </div>
+            <br>
+            <strong>핵심 원리:</strong> Anthropic 캐싱은 <em>prefix-based</em>. 앞에서부터 연속 일치하면 히트. 변하는 내용은 전부 마지막 user 메시지로 밀어서 prefix를 보존.
+          </div>
+        </div>
+
+        <div class="flow-arrow">↓</div>
+
+        <!-- API call -->
+        <div class="flow-block" style="border-color:var(--bp2)" onclick="toggleFlow(this)">
+          <div class="flow-block-header">
+            <span class="flow-step-num" style="background:var(--bp2)">API</span>
+            <span class="flow-block-title">Claude API 호출 → 스트리밍 응답</span>
+            <span class="flow-block-sub">cache_read ~85-90% hit</span>
+          </div>
+          <div class="flow-detail">
+            <strong>모델:</strong> claude-sonnet-4-x / haiku (config 설정)<br>
+            <strong>캐시 통계 (실측):</strong><br>
+            • Turn 2~21: cache_read 꾸준히 누적, cache_create 소량만 발생<br>
+            • Turn 22+: max context 32K 초과 시 RisuAI가 슬라이딩 → prefix 변경 → 캐시 미스<br>
+            • max context 360K로 확장 시 즉시 복구 (Turn 34: cache_read=22867)<br><br>
+            <strong>응답:</strong> 스트리밍으로 RisuAI에 즉시 반환. 사용자 대기 없음.<br>
+            <strong>비용:</strong> cache_read는 cache_create 대비 ~90% 저렴 (Anthropic 가격 정책)
+          </div>
+        </div>
+
+        <div class="flow-arrow">↓ 응답 반환 → RisuAI</div>
+        <div class="flow-arrow" style="color:var(--warn)">↓ (비동기, 유저 대기 없음)</div>
+
+        <!-- Step 4 -->
+        <div class="flow-block" onclick="toggleFlow(this)">
+          <div class="flow-block-header">
+            <span class="flow-step-num orange">④</span>
+            <span class="flow-block-title">Sub-B (Post-Turn Processing)</span>
+            <span class="flow-block-sub">agents/post_turn.py</span>
+          </div>
+          <div class="flow-detail">
+            <div class="flow-async-note">asyncio.create_task() — 응답 반환 후 백그라운드 실행. 유저 체감 지연 없음.</div>
+            <br>
+            <strong>처리 순서:</strong><br>
+            1. <strong>Gemini Flash 서사 요약</strong> — 4필드: summary / npcs_mentioned / scene_type / key_event<br>
+            2. <strong>중요도 점수</strong> — base 10 + scene_type(최대 40) + key_event(+30) + NPC 수(+10×min(2,n)) → 최대 100<br>
+            3. <strong>ChromaDB</strong>에 임베딩 저장 (벡터 검색용)<br>
+            4. <strong>SQLite</strong>에 turn_log 저장 (구조화 쿼리용)<br>
+            5. <strong>NPC 레지스트리</strong> 업데이트 — 필터링(엑스트라 제외) + 정규화(조사/어미 제거) + 퍼지 매칭(rapidfuzz, threshold=88)<br>
+            6. <strong>live_state.md</strong> 갱신 (scriptstate 스냅샷)<br><br>
+            <strong>동시성:</strong> asyncio.Lock — 빠른 연속 입력 시 Sub-B가 겹치지 않도록 보호
+          </div>
+        </div>
+
+        <div class="flow-arrow" style="color:var(--text3)">↓ 매 10턴마다</div>
+
+        <!-- Step 5 -->
+        <div class="flow-block" onclick="toggleFlow(this)">
+          <div class="flow-block-header">
+            <span class="flow-step-num orange">⑤</span>
+            <span class="flow-block-title">Curator (Letta Memory Block Agent)</span>
+            <span class="flow-block-sub">agents/curator.py</span>
+          </div>
+          <div class="flow-detail">
+            <strong>역할:</strong> AI GM — 전체 서사를 조감하고 메모리를 큐레이션<br><br>
+            <strong>실행 조건:</strong> 매 N턴 (기본 10턴), 비동기<br>
+            <strong>사용 모델:</strong> Letta Memory Block 에이전트 (자체 메모리 보유), fallback: DirectLLM<br><br>
+            <strong>처리 내용:</strong><br>
+            1. 최근 N턴 에피소드 + turn_log + 그래프 요약 수집<br>
+            2. 서사 큐레이션 → stable_prefix.md 갱신 (다음 턴부터 md_prefix로 주입)<br>
+            3. 모순 탐지 + 이벤트 큐 등록<br>
+            4. 로어 자동 생성 (<code>_auto_generate_lore</code>) — 10초 딜레이 후 실행<br>
+            &nbsp;&nbsp;→ lore 없는 엔티티 최대 3개/사이클 처리<br>
+            &nbsp;&nbsp;→ SQLite + ChromaDB 이중 저장<br>
+            5. Letta Memory Block → stable_prefix.md 동기화<br><br>
+            <strong>순환:</strong> stable_prefix.md → 다음 턴 ContextBuilder md_prefix → 프롬프트 주입
+          </div>
+        </div>
+
+      </div><!-- SAGA wrapper end -->
+
+    </div><!-- flow-body -->
+  </div><!-- flow-container -->
+
+  <div class="callout callout-info" style="margin-top:20px">
+    <strong>리버스 프록시 제약:</strong> SAGA는 RisuAI와 Claude API 사이에 투명하게 위치한다. 슬라이딩 윈도우(컨텍스트 트리밍) 시점을 직접 제어하지 못하고, RisuAI가 보내는 메시지를 그대로 처리한다. max context를 충분히 크게 설정하면 트리밍이 발동하지 않아 캐시가 유지된다.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ TAB 2 ═══ -->
+<div class="tab-panel" id="panel-1">
+  <div class="section-title">SystemStabilizer 상세</div>
+  <div class="section-sub">매 턴 system 메시지를 안정화해 Anthropic prefix-based 캐시를 보호한다.</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">문제: RisuAI의 동적 system 주입</div>
+      <div class="card-body">
+        RisuAI는 매 턴 활성화된 Lorebook 항목을 system 메시지에 주입한다.<br><br>
+        <strong>결과:</strong> system이 매 턴 달라짐 → Anthropic 캐시는 prefix-based이므로 BP1부터 전체 무효화 → cache_create만 발생, cache_read=0
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">해결: canonical 저장 + delta 추출</div>
+      <div class="card-body">
+        첫 턴에 system을 canonical로 저장. 이후 턴에는 변경분만 추출해 마지막 user 메시지로 이동.<br><br>
+        <strong>결과:</strong> system = canonical (고정) → BP1 캐시 유지 → cache_read 지속 누적
+      </div>
+    </div>
+  </div>
+
+  <h3>3단계 상태 흐름</h3>
+  <div class="anim-container">
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="stabPrev()">← 이전</button>
+      <button class="anim-btn" onclick="stabNext()">다음 →</button>
+      <span style="font-size:12px;color:var(--text3);margin-left:8px" id="stab-desc">Turn 1: 최초 시스템 저장</span>
+    </div>
+    <div class="anim-stage" id="stab-stage">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+
+  <h3>paragraph-level diff 알고리즘</h3>
+  <pre><span class="hl-comment"># system_stabilizer.py — _extract_delta()</span>
+canonical_paras = split_paragraphs(canonical)   <span class="hl-comment"># 기존 canonical</span>
+current_paras  = split_paragraphs(current_system) <span class="hl-comment"># RisuAI가 보낸 현재</span>
+
+added   = {p for p in current if current_count[p] > canonical_count[p]}
+removed = {p for p in canonical if canonical_count[p] > current_count[p]}
+
+<span class="hl-comment"># inject_at / inject_lore / inject_replace 감지</span>
+<span class="hl-comment"># → 수정된 단락은 delta에서 제외 (중복 주입 방지)</span>
+for r_para in removed:
+    for a_para in added:
+        if r_para in a_para or a_para in r_para:   <span class="hl-comment"># substring → inject_at</span>
+            matched_added.add(a_para)
+        elif word_overlap(r_para, a_para) > 0.5:  <span class="hl-comment"># overlap → inject_replace</span>
+            matched_added.add(a_para)
+
+pure_added = added - matched_added   <span class="hl-comment"># 진짜 새 Lorebook 항목만</span>
+<span class="hl-cached">delta_text = "\n\n".join(pure_added)  # → 마지막 user 메시지로</span></pre>
+
+  <hr class="divider">
+  <h3>lorebook_delta vs Curator 로어 — 출처와 목적의 차이</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="tag tag-miss">lorebook_delta</span> RisuAI 변경분</div>
+      <div class="card-body">
+        <strong>출처:</strong> RisuAI Lorebook (외부, 유저가 설정)<br>
+        <strong>목적:</strong> 캐시 보존 — canonical을 유지하면서 새 정보를 전달<br>
+        <strong>수명:</strong> 일회성 (해당 턴에만 user 메시지에 주입)<br>
+        <strong>저장:</strong> DB에 저장되지 않음<br>
+        <strong>예:</strong> 유저가 Lorebook에 새 NPC를 추가한 턴
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="tag tag-cached">Curator 로어</span> SAGA 자동 생성</div>
+      <div class="card-body">
+        <strong>출처:</strong> Curator가 에피소드 분석으로 자동 생성<br>
+        <strong>목적:</strong> 메모리 강화 — NPC 정보를 구조화해 매 턴 제공<br>
+        <strong>수명:</strong> 영구 (SQLite + ChromaDB에 저장)<br>
+        <strong>저장:</strong> DB 저장, 이후 매 턴 active_lore로 주입<br>
+        <strong>예:</strong> Turn 10에 루비아 로어 자동 생성
+      </div>
+    </div>
+  </div>
+  <div class="callout callout-warn">
+    둘 다 마지막 user 메시지에 주입되지만, lorebook_delta는 RisuAI에서 온 일회성 정보이고, Curator 로어는 SAGA가 축적한 지식이다.
+  </div>
+
+  <hr class="divider">
+  <h3>캐릭터 교체 감지 — Jaccard 유사도</h3>
+  <pre><span class="hl-comment"># _should_update_canonical()</span>
+canonical_set = set(split_paragraphs(canonical))
+current_set   = set(split_paragraphs(current))
+
+similarity = len(canonical_set <span class="hl-bp2">&amp;</span> current_set) / len(canonical_set <span class="hl-bp2">|</span> current_set)
+
+if similarity < <span class="hl-warn">0.30</span>:   <span class="hl-comment"># threshold (설정 가능)</span>
+    <span class="hl-cached">await _save_canonical(session_id, current_system)</span>
+    <span class="hl-comment"># 캐시는 깨지지만, 다른 캐릭터이므로 불가피</span></pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ TAB 3 ═══ -->
+<div class="tab-panel" id="panel-2">
+  <div class="section-title">3-BP 캐싱 구조</div>
+  <div class="section-sub">3개의 cache_control 마커로 대화 히스토리 대부분을 캐시 영역에 고정한다.</div>
+
+  <h3>프롬프트 전체 구조</h3>
+  <div class="flow-container">
+    <div class="flow-header">
+      <span>실제 API 요청 구조 (assistant 2개 이상 시 풀 BP 적용)</span>
+    </div>
+    <div class="flow-body" style="padding:12px">
+      <div class="prompt-struct">
+        <div class="ps-row">
+          <div class="ps-bracket ps-cached-bg" style="min-width:80px;font-size:9px;writing-mode:horizontal-tb;padding:6px 10px;border-radius:4px 0 0 4px;">CACHED<br><small>prefix</small></div>
+          <div class="ps-body ps-cached-body" style="display:flex;flex-direction:column;gap:4px">
+            <div><span class="ps-role">System</span><span class="ps-desc">canonical system prompt (SystemStabilizer가 매 턴 동일하게 유지)</span><span class="ps-tag ps-bp1">BP1 &nbsp;cache_control TTL 1h</span></div>
+            <div style="border-top:1px solid #1a2840;padding-top:4px;margin-top:2px"><span class="ps-role">User</span><span class="ps-desc">"Hi" (첫 유저 메시지)</span></div>
+            <div><span class="ps-role">Asst</span><span class="ps-desc">"Hello!" (첫 응답)</span></div>
+            <div style="color:var(--text3);font-size:11px;padding:2px 0">… 대화 히스토리 …</div>
+            <div><span class="ps-role">User</span><span class="ps-desc">"Tell me more"</span></div>
+            <div><span class="ps-role">Asst</span><span class="ps-desc">중간 응답 텍스트</span><span class="ps-tag ps-bp2">BP2</span></div>
+            <div><span class="ps-role">User</span><span class="ps-desc">"계속해줘"</span></div>
+            <div><span class="ps-role">Asst</span><span class="ps-desc">직전 응답 텍스트</span><span class="ps-tag ps-bp3">BP3</span></div>
+          </div>
+        </div>
+        <div class="ps-sep">─── 캐시 경계 — 이 아래는 매 턴 새로 씀 ───</div>
+        <div class="ps-row">
+          <div class="ps-bracket ps-uncached-bg" style="min-width:80px;font-size:9px;writing-mode:horizontal-tb;padding:6px 10px;border-radius:4px 0 0 4px;">NOT<br>CACHED</div>
+          <div class="ps-body ps-uncached-body" style="display:flex;flex-direction:column;gap:3px">
+            <div><span class="ps-role">User</span></div>
+            <div style="color:var(--cached);font-size:11px;padding-left:40px">[--- SAGA Context Cache ---]</div>
+            <div style="color:var(--text2);font-size:11px;padding-left:40px">md_prefix (stable_prefix.md 내용 — Curator가 갱신)</div>
+            <div style="color:var(--uncached);font-size:11px;padding-left:40px">[--- Active Lorebook ---]</div>
+            <div style="color:var(--text2);font-size:11px;padding-left:40px">lorebook_delta (SystemStabilizer 추출, 일회성)</div>
+            <div style="color:var(--warn);font-size:11px;padding-left:40px">[--- SAGA Dynamic ---]</div>
+            <div style="color:var(--text2);font-size:11px;padding-left:40px">dynamic_suffix (에피소드 + live_state + active_lore)</div>
+            <div style="color:var(--text);font-size:11px;padding-left:40px;font-style:italic">"유저의 실제 입력"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>BP 배치 조건</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">assistant 수에 따른 BP 수</div>
+      <div class="card-body">
+        <table>
+          <tr><th>assistant 수</th><th>적용 BP</th><th>효과</th></tr>
+          <tr><td>0개</td><td><span class="tag tag-bp1">BP1</span>만</td><td>system만 캐시</td></tr>
+          <tr><td>1개</td><td><span class="tag tag-bp1">BP1</span> <span class="tag tag-bp2">BP2</span></td><td>system + 대화 초반</td></tr>
+          <tr><td>2개 이상</td><td><span class="tag tag-bp1">BP1</span> <span class="tag tag-bp2">BP2</span> <span class="tag tag-bp3">BP3</span></td><td>풀 캐싱</td></tr>
+        </table>
+        <p>BP2는 대화 중간점 assistant에, BP3는 마지막 assistant에 배치한다.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Anthropic 최소 요구사항</div>
+      <div class="card-body">
+        <ul>
+          <li>cache_control이 붙은 블록은 최소 <strong>1024 tokens</strong> 필요</li>
+          <li>BP1 (system): TTL <strong>1h</strong> (extended-cache-ttl 베타 활성)</li>
+          <li>BP2, BP3: TTL <strong>5m</strong> (기본)</li>
+          <li>캐싱은 prefix-based — 앞에서부터 연속 일치해야 히트</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>왜 동적 컨텍스트를 user 메시지에 넣는가</h3>
+  <div class="callout callout-info">
+    <strong>핵심 원리:</strong> Anthropic 캐싱은 prefix(앞에서부터의 연속 일치)로 작동한다. system 메시지를 포함한 앞부분이 동일하면 캐시 히트. 변하는 내용(lorebook_delta, dynamic_suffix, 유저 입력)을 마지막 user 메시지에 넣으면, 캐시 경계 이전 prefix(BP1~BP3)는 항상 동일하게 유지된다.
+  </div>
+  <div class="callout callout-warn">
+    <strong>system role에 동적 컨텍스트를 넣으면 안 되는 이유:</strong> system 메시지가 매 턴 바뀌면 BP1 마커가 붙어 있어도 prefix가 달라져서 캐시 미스가 발생한다. SystemStabilizer가 필요한 이유다.
+  </div>
+
+  <h3>실제 코드 — cache_control 마킹</h3>
+  <pre><span class="hl-comment"># server.py — _build_cacheable_messages() 핵심 로직</span>
+assistant_msgs = [m for m in messages if m["role"] == "assistant"]
+
+<span class="hl-comment"># BP1: system에 항상 붙임</span>
+system_msg = {"role": "system", "content": canonical, <span class="hl-cached">"cache_control": {"type": "ephemeral"}</span>}
+
+if len(assistant_msgs) >= 2:
+    mid_idx = len(assistant_msgs) // 2
+    <span class="hl-comment"># BP2: 중간 assistant</span>
+    assistant_msgs[mid_idx][<span class="hl-bp2">"cache_control"</span>] = {"type": "ephemeral"}
+    <span class="hl-comment"># BP3: 마지막 assistant</span>
+    assistant_msgs[-1][<span class="hl-bp3">"cache_control"</span>] = {"type": "ephemeral"}
+elif len(assistant_msgs) == 1:
+    assistant_msgs[0][<span class="hl-bp2">"cache_control"</span>] = {"type": "ephemeral"}</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ TAB 4 ═══ -->
+<div class="tab-panel" id="panel-3">
+  <div class="section-title">Sub-B + Curator 상세</div>
+  <div class="section-sub">응답 반환 후 비동기로 실행되는 메모리 시스템. 유저 대기 없음.</div>
+
+  <h3>Sub-B (PostTurnExtractor) — 매 턴 비동기 실행</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">실행 타이밍</div>
+      <div class="card-body">
+        <code>asyncio.create_task()</code>로 응답 반환 직후 백그라운드 실행.<br>
+        asyncio.Lock으로 동시 실행 방지.<br>
+        소요 시간: Gemini Flash ~5초 (유저 체감 0ms)
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Gemini Flash 선택 이유</div>
+      <div class="card-body">
+        매 턴 실행되는 만큼 비용과 속도가 핵심.<br>
+        Flash는 빠르고(~5초) 저렴하며 JSON 출력이 안정적.<br>
+        요약 품질보다 처리량이 우선.
+      </div>
+    </div>
+  </div>
+
+  <h3>4필드 서사 요약 구조</h3>
+  <pre>{
+  <span class="hl-cached">"summary"</span>: "이 턴에서 일어난 일의 서사적 요약 텍스트",
+  <span class="hl-bp2">"npcs_mentioned"</span>: ["루비아", "최은지", "한결"],  <span class="hl-comment"># NPC 이름 목록</span>
+  <span class="hl-bp3">"scene_type"</span>: "combat" | "event" | "exploration" | "dialogue",
+  <span class="hl-warn">"key_event"</span>: "중요 사건 설명" | null  <span class="hl-comment"># null이면 일상 씬</span>
+}</pre>
+
+  <h3>중요도 점수 계산</h3>
+  <pre><span class="hl-comment"># post_turn.py — _calculate_importance()</span>
+score = 10  <span class="hl-comment"># base</span>
+
+if scene_type == "combat":      score += <span class="hl-warn">40</span>
+elif scene_type == "event":     score += <span class="hl-warn">35</span>
+elif scene_type == "exploration": score += 15
+
+if key_event:                   score += <span class="hl-warn">30</span>
+if npcs_mentioned:              score += 10 * min(2, len(npcs))  <span class="hl-comment"># 최대 +20</span>
+
+return min(score, <span class="hl-cached">100</span>)  <span class="hl-comment"># 캡 100, 중요도≥50 시 high-importance 로깅</span></pre>
+
+  <h3>NPC 정규화 파이프라인 (Mem0 방식)</h3>
+  <pre><span class="hl-comment"># 1단계: 엑스트라 필터링 (unnamed extras 제거)</span>
+_EXTRA_PATTERN = r"^(마을|숲|동굴)?\s*(사람|여인|병사|상인|농부…)\s*\d*$"
+
+<span class="hl-comment"># 2단계: 정규화 (조사/어미/경칭 제거)</span>
+def normalize(name):
+    name = strip_parenthetical(name)   <span class="hl-comment"># "라쿤(Raccoon)" → "라쿤"</span>
+    name = strip_en_article(name)      <span class="hl-comment"># "the King" → "King"</span>
+    name = strip_jp_honorific(name)    <span class="hl-comment"># "루비아-san" → "루비아"</span>
+    name = strip_ko_particle(name)     <span class="hl-comment"># "루비아가" → "루비아"</span>
+    return name.lower()
+
+<span class="hl-comment"># 3단계: 퍼지 매칭 (rapidfuzz token_set_ratio, threshold=88)</span>
+<span class="hl-comment"># "루비아" ≈ "루비아 (Rubia)" → 같은 캐릭터로 통합</span></pre>
+
+  <hr class="divider">
+  <h3>Curator (CuratorRunner) — 매 10턴 비동기</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">아키텍처</div>
+      <div class="card-body">
+        <strong>Primary:</strong> Letta Memory Block 에이전트<br>
+        → 에이전트가 자체 메모리를 보유 (서사 연속성)<br>
+        → 에이전트 생성은 lazy (세션별 최초 실행 시)<br><br>
+        <strong>Fallback:</strong> DirectLLMCuratorAdapter<br>
+        → Letta 불가용 시 자동 전환
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">stable_prefix.md 업데이트 흐름</div>
+      <div class="card-body">
+        1. Curator 실행 → compressed_summary 생성<br>
+        2. <code>_compress_story_md()</code> → stable_prefix.md 갱신<br>
+        3. Letta Memory Block → stable_prefix.md 동기화<br>
+        4. 다음 턴 ContextBuilder → md_prefix로 주입
+      </div>
+    </div>
+  </div>
+
+  <h3>실제 큐레이션 스냅샷 비교</h3>
+  <div class="snap-tabs">
+    <div class="snap-tab active" onclick="switchSnap(0, this)">Turn 10</div>
+    <div class="snap-tab" onclick="switchSnap(1, this)">Turn 20</div>
+    <div class="snap-tab" onclick="switchSnap(2, this)">Turn 30</div>
+  </div>
+  <div class="snap-content">
+    <div class="snap-panel active" id="snap-0">
+      <h4>Turn 10 — 초기 큐레이션</h4>
+      <p><strong>stable_prefix.md 내용 (예시):</strong></p>
+      <pre><span class="hl-comment">## 서사 요약</span>
+주인공이 항구 도시 오르바에 도착. 술집에서 정보를 수집하며
+루비아(항구 정보원)와 첫 접촉. 최은지(왕국 밀정)의 존재를
+암시하는 복선 발생.
+
+<span class="hl-comment">## NPC 로어 (자동 생성)</span>
+<span class="hl-cached">### 루비아</span>
+오르바 항구의 정보상. 표면적으로는 주점 웨이트리스이나,
+항구를 드나드는 선원들의 정보를 수집해 판매한다.
+주인공에게 호의적이나 신뢰하기까지는 시간이 필요하다.
+<span class="hl-dim">키워드: 루비아, 항구, 정보, 오르바</span></pre>
+    </div>
+    <div class="snap-panel" id="snap-1">
+      <h4>Turn 20 — 캐릭터 심화</h4>
+      <p><strong>stable_prefix.md 내용 (예시):</strong></p>
+      <pre><span class="hl-comment">## 서사 요약</span>
+루비아의 배신으로 주인공이 최은지에게 체포됨. 감옥에서
+한결(귀족 출신 죄수)을 만나 탈출 계획 수립.
+도시 동쪽 창고에 숨겨진 단서 미회수 상태.
+
+<span class="hl-comment">## NPC 로어</span>
+<span class="hl-cached">### 루비아</span>
+[Turn 10 정보 + 갱신]
+왕국 밀정 조직의 하급 요원임이 밝혀짐. 주인공 배신은
+조직의 강압에 의한 것으로, 내면적 갈등 상태.
+
+<span class="hl-cached">### 한결</span>
+몰락한 귀족 가문 출신. 감옥에서 5년째 수감 중.
+도시 지하 통로 구조를 상세히 알고 있음.
+<span class="hl-dim">키워드: 한결, 귀족, 지하통로, 탈출</span>
+
+<span class="hl-comment">## 활성 복선</span>
+- 창고 단서 미회수 (Turn 14)
+- 최은지의 진짜 목적 불명</pre>
+    </div>
+    <div class="snap-panel" id="snap-2">
+      <h4>Turn 30 — 서사 압축 + 분기점 식별</h4>
+      <p><strong>stable_prefix.md 내용 (예시):</strong></p>
+      <pre><span class="hl-comment">## 압축된 서사 (Turn 1-30)</span>
+항구 도시 오르바 도착 → 루비아 포섭 → 왕국 밀정 조직 발각
+→ 최은지 체포 → 한결과 탈출 성공 → 왕도로 이동 중.
+
+<span class="hl-comment">## 분기점</span>
+루비아 신뢰 여부가 3차 막에서 분기 포인트.
+현재 루비아는 중립(배신 후 후회 상태).
+
+<span class="hl-comment">## NPC 로어 (누적)</span>
+루비아 / 최은지 / 한결 / [신규: 성문 경비대장 "빈첸조"]
+
+<span class="hl-comment">## 세계 상태</span>
+위치: 왕도 50km 전 여관
+미완 이벤트: 빈첸조 뇌물 협상, 창고 단서 (여전히 미회수)</pre>
+    </div>
+  </div>
+
+  <div class="callout callout-success" style="margin-top:16px">
+    <strong>순환 구조:</strong> Sub-B(매 턴) → ChromaDB/SQLite → Curator(10턴마다) → stable_prefix.md → ContextBuilder(다음 턴) → 프롬프트 주입 → Claude API
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ TAB 5: 서사 시뮬레이터 ═══ -->
+<div class="tab-panel" id="panel-4">
+  <div class="section-title">서사 시뮬레이터 — stable_prefix.md 변화 추적</div>
+  <div class="section-sub">Curator가 10턴마다 큐레이션한 결과물이 어떻게 진화하는지 보여준다. 사람의 개입 없이 자동 생성된 결과다.</div>
+
+  <!-- Turn selector -->
+  <div style="display:flex;gap:8px;margin:1.5rem 0;flex-wrap:wrap;">
+    <button class="snap-btn active" onclick="switchSim(0)">Turn 10</button>
+    <button class="snap-btn" onclick="switchSim(1)">Turn 20</button>
+    <button class="snap-btn" onclick="switchSim(2)">Turn 30</button>
+    <button class="snap-btn" onclick="switchSim(3)">Turn 40</button>
+    <button class="snap-btn" onclick="switchSim(4)">Turn 50</button>
+  </div>
+
+  <!-- Why panel -->
+  <div id="sim-why" class="callout callout-info" style="margin-bottom:1.5rem;"></div>
+
+  <!-- Split view: MD content + Explanation -->
+  <div class="grid-2">
+    <div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text3);margin-bottom:8px;">stable_prefix.md</div>
+      <div id="sim-md" style="background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:1.2rem;font-size:13px;line-height:1.8;max-height:600px;overflow-y:auto;white-space:pre-wrap;"></div>
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text3);margin-bottom:8px;">변화 분석</div>
+      <div id="sim-analysis" style="background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:1.2rem;font-size:13px;line-height:1.8;max-height:600px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- Delta highlights -->
+  <div style="margin-top:1.5rem;">
+    <div style="font-family:var(--mono);font-size:12px;color:var(--text3);margin-bottom:8px;">Turn 10 → 20 → 30 → 40 → 50 핵심 변화</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+      <div class="card" style="border-color:rgba(57,208,200,0.3);">
+        <div style="font-size:13px;font-weight:600;color:var(--cached);margin-bottom:8px;">서사 복잡도</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+          <strong style="color:var(--text1)">T10:</strong> 3개 서사 구간, 2 NPC<br>
+          <strong style="color:var(--text1)">T20:</strong> 4개 서사 구간, 3 NPC, 복선 태깅<br>
+          <strong style="color:var(--text1)">T30:</strong> 4개 서사 구간, 3 NPC, 복선 회수<br>
+          <strong style="color:var(--text1)">T40:</strong> 6개 서사 구간, 3 NPC, 면담 진행<br>
+          <strong style="color:var(--text1)">T50:</strong> 8개 서사 구간, 9 NPC, 운영 개시
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(240,136,62,0.3);">
+        <div style="font-size:13px;font-weight:600;color:var(--uncached);margin-bottom:8px;">NPC 추적</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+          <strong style="color:var(--text1)">T10:</strong> 루비아, 최은지 (로어 미생성)<br>
+          <strong style="color:var(--text1)">T20:</strong> + 한결 등장, 로어 자동 생성 시작<br>
+          <strong style="color:var(--text1)">T30:</strong> 루비아 감정선 심화, 한결 로어 확장<br>
+          <strong style="color:var(--text1)">T40:</strong> Gemini fallback → Letta 스타일 변환<br>
+          <strong style="color:var(--text1)">T50:</strong> 리나·정재현·이지은·희원 등 9명 등록
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(163,113,247,0.3);">
+        <div style="font-size:13px;font-weight:600;color:var(--bp1);margin-bottom:8px;">복선 진화</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+          <strong style="color:var(--text1)">T10:</strong> 계약 기억상실, 루비아 감정 변화<br>
+          <strong style="color:var(--text1)">T20:</strong> [즉시 해결], [관계 갈등], [규정 압박] 태깅<br>
+          <strong style="color:var(--text1)">T30:</strong> 기억 회복 → 복선 회수, 루비아 죄책감<br>
+          <strong style="color:var(--text1)">T40:</strong> 마력 교환 진심 고백, 면담 결과 대기<br>
+          <strong style="color:var(--text1)">T50:</strong> 계약 무효→승인 [회수됨], 희원 의문 등장
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(88,166,255,0.3);">
+        <div style="font-size:13px;font-weight:600;color:var(--bp2);margin-bottom:8px;">캐시 성능</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+          <strong style="color:var(--text1)">T1~21:</strong> 85~90% 히트 (3-BP 정상)<br>
+          <strong style="color:var(--text1)">T22~30:</strong> ~20% (슬라이딩 윈도우 발동)<br>
+          <strong style="color:var(--text1)">T31~:</strong> 즉시 복구 (max context 360K 확장)<br>
+          <strong style="color:var(--text1)">T40~50:</strong> 안정적 고히트율 유지
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(63,185,80,0.3);">
+        <div style="font-size:13px;font-weight:600;color:var(--bp3);margin-bottom:8px;">로어 진화</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+          <strong style="color:var(--text1)">T10:</strong> 로어 없음<br>
+          <strong style="color:var(--text1)">T20:</strong> 루비아·최은지·한결 자동 생성<br>
+          <strong style="color:var(--text1)">T30:</strong> 한결 로어 추가 상세화<br>
+          <strong style="color:var(--text1)">T40:</strong> 루비아 감정선 로어에 반영<br>
+          <strong style="color:var(--text1)">T50:</strong> 9 NPC 전원 로어 완성
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="callout" style="margin-top:1.5rem;border-color:var(--cached);">
+    <strong style="color:var(--cached);">이게 왜 중요한가?</strong><br><br>
+    <span style="color:var(--text2);font-size:13px;line-height:1.8;">
+      텍스트 요약 방식(크랙 등)은 최근 대화를 압축한다. 요약의 요약을 반복하면 <strong style="color:var(--uncached)">오래된 정보가 희석</strong>된다.<br><br>
+      SAGA의 Curator는 <strong style="color:var(--cached)">구조화된 큐레이션</strong>을 수행한다:<br>
+      • 서사를 <strong>구간별로 분리</strong>해서 초기 이벤트도 보존<br>
+      • NPC를 <strong>개별 엔티티</strong>로 추적해서 감정 변화/관계 변화 기록<br>
+      • 복선을 <strong>우선순위 태깅</strong>해서 회수 시점까지 유지<br><br>
+      30턴이 지나도 "Turn 5에서 루비아가 뺨을 붉혔다"를 정확히 참조할 수 있다. <strong style="color:var(--cached)">슬라이딩 윈도우로 메시지가 잘려도 큐레이션 결과는 DB에 남아 다시 주입된다.</strong>
+    </span>
+  </div>
+</div>
+
+
+</div><!-- .content -->
+
+<script>
+// ── TAB SWITCHING ──
+function switchTab(idx) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.tab-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+}
+
+// ── FLOW BLOCK TOGGLE ──
+function toggleFlow(el) {
+  const wasActive = el.classList.contains('active');
+  document.querySelectorAll('.flow-block.active').forEach(b => b.classList.remove('active'));
+  if (!wasActive) el.classList.add('active');
+}
+
+// ── SCRIPT STEP TOGGLE ──
+function toggleScript(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+// ── SIM (서사 시뮬레이터) ──
+const simData = [
+  {
+    why: '<strong>Turn 10 -- 첫 큐레이션.</strong> Curator가 처음으로 10턴의 에피소드를 종합 분석한다. 서사 구간을 3개로 분리하고, NPC 2명(루비아, 최은지)을 식별한다. NPC 로어는 아직 생성되지 않은 상태.',
+    md: `---\nversion: 0\nsession_id: 84a6be2572e0feff\n---\n## 서사 요약 (Turn 10 큐레이션 완료)\n\n### 핵심 상황\n- **주인공**: 반 - 술에 취해 심연 주식회사와 던전 프랜차이즈 계약서에 서명했으나 전혀 기억하지 못함\n- **주요 NPC**:\n  - 루비아 (서큐버스, 심연 주식회사 직원) - 계약 관리 및 던전 운영 지원\n  - 최은지 (정부 협력관, 던전 관리청) - 던전 감시 및 정기 점검 담당\n\n### 서사 진행\n1. **계약 혼란 & 시설 안내 (Turn 1-4)**\n2. **간판 설치 협력 (Turn 5-6)**: 루비아가 감정적으로 동요(뺨이 붉어짐)\n3. **정부 점검 시작 (Turn 7-9)**\n\n### 주요 복선\n- 루비아의 감정 변화\n- 계약서의 복잡한 조항들\n- 반의 계약 기억상실\n\n## 등장인물\n### 루비아 / ### 최은지\n- 특성: []\n\n## 로어\n(아직 없음)`,
+    analysis: `<strong style="color:var(--cached)">구조 분석:</strong>\n\n• <strong>서사 3구간</strong> 자동 분리 — 수동 개입 없이 턴 범위까지 정확\n• <strong>복선 3개</strong> 식별 — "루비아 감정 변화"를 5턴에서 잡아냄\n• <strong>NPC 2명</strong> 등록 — 아직 로어 미생성 (다음 큐레이션에서 자동 생성)\n\n<strong style="color:var(--uncached)">텍스트 요약과의 차이:</strong>\n텍스트 요약은 "최근 10턴을 한 문단으로 압축"한다.\nCurator는 구간을 분리하고 복선을 태깅한다.\n→ 100턴 후에도 "Turn 5에서 루비아가 뺨을 붉혔다"를 찾을 수 있다.`
+  },
+  {
+    why: '<strong>Turn 20 -- 갈등 심화 반영.</strong> 한결(과장)이 Turn 14에서 등장하며 서사 전환점이 생겼다. Curator가 이를 감지하고 새 서사 구간을 추가한다. NPC 로어 자동 생성이 시작되고, 복선에 우선순위 태깅이 붙는다.',
+    md: `---\nversion: 1\nsession_id: 84a6be2572e0feff\n---\n## 서사 요약 (Turn 20 큐레이션 완료)\n\n### 핵심 상황\n- **주인공**: 반 - 만취 상태에서 계약 체결 (루비아가 증인). 기억 못함\n- **주요 NPC**:\n  - 루비아 - 현재 한결에게 추궁당하는 중\n  - 최은지 - 반을 두둔하려 하나 한결에게 제지당함\n  - 한결 (과장) - Turn 14 예고 없이 등장. 계약 적법성 조사 중\n\n### 서사 진행\n1. **계약 혼란 & 시설 안내 (Turn 1-6)**\n2. **정부 점검 시작 (Turn 7-13)**: 몬스터 미배치 문제 발견\n3. **한결 등장 & 갈등 심화 (Turn 14-19)**: 계약 무효 가능성 제기\n\n### 주요 복선 & 분기점\n- **[즉시 해결 필요]** 계약 무효 여부 판단\n- **[관계 갈등]** 루비아와의 신뢰 문제\n- **[규정 압박]** 몬스터 배치 강제\n\n## 로어\n### lore_루비아\n루비아는 신입 던전주인 반을 보좌하는 조력자로...\n### lore_최은지\n최은지는 던전 관리청 소속의 정기 점검 담당자로...\n### lore_한결\n한결은 냉철하고 꼼꼼한 성격의 과장으로...`,
+    analysis: `<strong style="color:var(--cached)">Turn 10 → 20 변화:</strong>\n\n• <strong>서사 구간 3→4개</strong> — "한결 등장 & 갈등 심화" 구간 추가\n• <strong>NPC 2→3명</strong> — 한결 자동 감지 + 등록\n• <strong>복선 태깅 진화</strong> — 단순 나열 → [즉시 해결], [관계 갈등] 우선순위\n• <strong>로어 자동 생성</strong> — 루비아, 최은지, 한결 각각 2~3문장\n\n<strong style="color:var(--bp1)">핵심 포인트:</strong>\nTurn 14의 서사 전환점(한결 등장)을 Curator가 자동으로 감지했다.\n사람이 "여기서 새 구간 시작"이라고 알려주지 않아도\n에피소드 분석만으로 서사 구조 변화를 잡아낸다.`
+  },
+  {
+    why: '<strong>Turn 30 -- 복선 회수 감지.</strong> Turn 25-27에서 반이 기억을 회복하고 루비아가 "술을 권했다"고 고백한다. Curator가 이전에 태깅한 복선("계약 기억상실")의 회수를 감지한다. 신규 NPC 3명(리나, 미라, 페이)도 추가된다.',
+    md: `---\nversion: 2\nsession_id: 84a6be2572e0feff\n---\n## 서사 요약 (Turn 30 큐레이션 완료)\n\n### 핵심 상황\n- **주인공**: 반 - Turn 25-27에서 기억 회복, 자신의 진심이었다고 밝힘\n- **주요 NPC**:\n  - 루비아 - Turn 26에서 자신이 반에게 술을 권했다고 고백, 깊은 죄책감\n  - 최은지 - Turn 21-29에서 적극적으로 반을 도움\n  - 한결 - Turn 20에서 물러남. "내일 면담"으로 재등장 예고\n\n### 서사 진행\n1. **계약 혼란 & 시설 안내 (Turn 1-6)**\n2. **정부 점검 시작 (Turn 7-13)**\n3. **한결 등장 & 갈등 심화 (Turn 14-19)**\n4. **갈등 완화 & 진실 규명 (Turn 20-30)**: 기억 회복, 루비아 죄책감 고백\n\n### 현재 상태 (Turn 30)\n- 한결과의 면담 "내일" 예정\n- 루비아 감정적 불안정 상태\n- 신규 NPC: 리나, 미라, 페이 등장\n\n## 로어\n### lore_루비아 / lore_최은지 / lore_한결\n(각각 2~3문장 자동 생성)`,
+    analysis: `<strong style="color:var(--cached)">Turn 20 → 30 변화:</strong>\n\n• <strong>서사 구간 유지 + 4번째 구간 확장</strong> — "갈등 완화 & 진실 규명"\n• <strong>복선 회수 감지</strong> — "계약 기억상실" → Turn 25-27에서 회수됨\n• <strong>NPC 감정 변화 추적</strong> — 루비아: "감정적 동요" → "죄책감 고백"\n• <strong>신규 NPC 없음</strong> — 한결은 20턴에서 이미 등록됨\n\n<strong style="color:var(--uncached)">30턴 시점의 의미:</strong>\n텍스트 요약 방식이라면 Turn 5의 "루비아 뺨이 붉어짐"은\n이미 요약에서 사라졌을 것이다.\n\nSAGA Curator는 Turn 10에서 복선으로 태깅 → Turn 30까지 유지\n→ Turn 26의 고백과 연결해 서사 체인을 보존한다.\n\n<strong style="color:var(--cached)">구조화된 메모리가 이 연결을 가능하게 한다.</strong>`
+  },
+  {
+    why: '<strong>Turn 40 -- 새벽 고백과 공식 면담.</strong> Turn 35에서 루비아가 마력 교환이 "단순 업무만은 아니었다"고 고백한다. Turn 36에서 한결이 면담 1시간 전 조기 등장하고, Turn 37~40에서 공식 면담이 진행된다. Gemini fallback이 발생했으나 Letta 스타일로 정규화되어 로어 일관성은 유지된다.',
+    md: `---\nversion: 3\nsession_id: 84a6be2572e0feff\n---\n## 서사 요약 (Turn 40 큐레이션 완료)\n\n### 핵심 상황\n- **주인공**: 반 - 기억 회복 후 진심이었다고 책임 선언. 현재 한결과의 공식 면담 진행 중\n- **주요 NPC**:\n  - 루비아 - Turn 26 술 권유 고백. Turn 35 새벽 마력 교환이 "단순 업무만은 아니었다"고 진심 고백\n  - 최은지 - 적극적 조력자. 가이드북 전달 등 지원\n  - 한결 - Turn 36에서 면담 1시간 전(7시) 조기 등장. 면담 진행 중\n\n### 서사 진행\n1. **계약 혼란 & 시설 안내 (Turn 1-6)**\n2. **정부 점검 & 몬스터 미배치 (Turn 7-13)**\n3. **한결 등장 & 갈등 심화 (Turn 14-19)**: 계약 무효 가능성 제기\n4. **갈등 완화 & 진실 규명 (Turn 20-30)**: 기억 회복, 루비아 죄책감 고백\n5. **새벽 고백 & 면담 준비 (Turn 31-36)**: 마력 수급 기록 발견, 루비아 진심 고백\n6. **한결과의 공식 면담 (Turn 37-40)**: 마력 교환 기록 근거 추궁, 면담 진행 중\n\n### 현재 상태 (Turn 40)\n- 한결과의 공식 면담 진행 중 — 계약 유효성 최종 판단 대기\n- 반이 운영 규정을 논리적으로 준비한 상태 (밤새 공부)\n- 루비아: 마력 교환 진심 고백 이후 감정적 불안정\n\n### 주요 복선 & 분기점\n- **[즉시 해결 필요]** 한결과의 면담 결과 — 계약 유효성 최종 판단\n- **[진행 중]** 루비아의 감정 진전 — 마력 교환 고백 이후 반의 반응 미정\n- **[미해결]** 기억 조작 가능성 — Turn 26 루비아의 우려\n\n## 로어\n### lore_루비아\nA급 사냥꾼 수준의 마력을 보유한 엘리트 서큐버스. D급 던전 지원은 사실상 좌천. Turn 35에서 마력 교환이 단순 업무가 아닌 진심이었음을 고백.\n\n### lore_최은지 / lore_한결\n(2~3문장 자동 생성, 이전 큐레이션 연속)`,
+    analysis: `<strong style="color:var(--cached)">Turn 30 → 40 변화:</strong>\n\n• <strong>서사 구간 3→6개</strong> — "새벽 고백 & 면담 준비", "공식 면담" 2개 구간 신규 추가\n• <strong>NPC 수 유지 (3명)</strong> — 신규 등장 없음, 기존 NPC 관계 깊어짐\n• <strong>루비아 감정선 진전</strong> — 죄책감 고백 → 마력 교환 진심 고백 (단계적 심화)\n• <strong>한결 역학 전환</strong> — 대립자 → 공식 면담자로 포지션 변화\n• <strong>Gemini fallback 발생</strong> — Letta 불가 시 DirectLLMCuratorAdapter 자동 전환, 로어 스타일 정규화로 일관성 유지\n\n<strong style="color:var(--bp1)">주목할 점:</strong>\nTurn 10부터 추적해온 "루비아 감정 변화" 복선이\nTurn 35의 마력 교환 고백으로 한 단계 심화된다.\n\n단순 텍스트 요약은 "30턴 전의 간판 설치 장면"을 이미 잊었겠지만,\nSAGA는 서사 구간 1에서 태깅한 감정 씨앗을\n6번째 구간까지 연속 추적한다.\n\n<strong style="color:var(--warn)">Gemini fallback:</strong> Letta 서버 불가 시 DirectLLMCuratorAdapter가 자동 작동한다. 로어 포맷은 동일하게 유지되어 LLM이 혼란 없이 읽는다.`
+  },
+  {
+    why: '<strong>Turn 50 -- 던전 정식 운영 개시.</strong> Turn 39에서 한결이 계약을 최종 승인한다. Turn 40에서 님프 직원 4명이 도착하고, Turn 47에서 첫 손님이 방문한다. 서사 구간은 8개로 확장되고, NPC는 9명으로 늘어난다. [회수됨] 태깅이 처음 등장한다.',
+    md: `---\nversion: 4\nsession_id: 84a6be2572e0feff\n---\n## 서사 요약 (Turn 50 큐레이션 완료)\n\n### 핵심 상황\n- **주인공**: 반 - 던전 정식 운영 중. 마력 5.0(약 2일치)으로 빠듯한 상태\n- **주요 NPC**:\n  - 루비아 - Turn 35 마력 교환 진심 고백. 감정적으로 불안정하나 반을 적극 지지\n  - 최은지 - 순진하고 밝은 성격. 반을 적극적으로 돕는 신입 협력관\n  - 한결 - Turn 39에서 반의 논리적 규정 인용에 감명받아 계약 최종 승인\n  - 리나 (님프, 마왕24 점장) - Turn 40 직원 4명과 도착, 편의점 운영 중\n  - 정재현·이지은 (E급 사냥꾼) - Turn 47 첫 손님. 고블린 전투 성공, 마력 +1.2\n  - 희원 (The Order 성녀) - Turn 51 호위와 함께 의미심장하게 등장\n\n### 서사 진행\n1. **계약 혼란 & 시설 안내 (Turn 1-4)**\n2. **간판 설치 & 감정 싹트기 (Turn 5-6)**\n3. **정부 점검 시작 (Turn 7-13)**\n4. **한결 등장 & 계약 위기 (Turn 14-19)**\n5. **진실 규명 & 책임 선언 (Turn 20-30)**\n6. **새벽 공부 & 마력 교환의 진실 (Turn 31-36)**\n7. **면담 & 계약 승인 (Turn 37-39)**: 한결 최종 승인 "생각보다 괜찮네"\n8. **던전 운영 개시 (Turn 40-51)**: 편의점 개점, 몬스터 배치, 첫 사냥꾼 방문\n\n### 현재 상태 (Turn 51)\n- 계약 승인 완료, D급 던전 정식 등록\n- 마력 5.0 / 일일 소비 2.4 → 2일 내 추가 수급 필수\n- 월간 의무 사냥꾼 10명 중 2명 달성\n- 희원(성녀) 방금 도착 — 목적 불명\n\n### 주요 복선 & 분기점\n- **[새 전개]** 희원의 등장 — 호위 동반, 목적 불명\n- **[긴급]** 마력 부족 — 5.0으로 2일 버텨야 함\n- **[진행 중]** 루비아 감정 — 고백 이후 반의 반응 대기\n- **[회수됨]** 계약 기억상실 → Turn 25-27 회수\n- **[회수됨]** 계약 무효 → Turn 39 승인으로 해결\n\n## 로어\n### lore_루비아 / lore_최은지 / lore_한결\n(상세 로어, 이전 버전에서 점진적으로 확장)\n\n### lore_리나 / lore_정재현 / lore_이지은 / lore_희원\n(Turn 40~51 등장 시점에 자동 생성)`,
+    analysis: `<strong style="color:var(--cached)">Turn 40 → 50 변화:</strong>\n\n• <strong>서사 구간 6→8개</strong> — "면담 & 계약 승인", "던전 운영 개시" 2개 추가\n• <strong>NPC 3→9명</strong> — 리나(님프), 정재현, 이지은, 희원 등 신규 등록\n• <strong>[회수됨] 태깅 최초 등장</strong> — "계약 기억상실"과 "계약 무효" 복선이 실제로 해소됨을 명시\n• <strong>한결 역할 완료</strong> — 대립자 → 면담자 → 승인자로 호 완성\n• <strong>루비아 감정선 보류</strong> — 고백 이후 반의 반응 미확정 상태로 유지\n\n<strong style="color:var(--bp3)">50턴 시점의 의미:</strong>\nTurn 1에서 시작된 "술취한 계약" 복선이 Turn 39에서\n[회수됨]으로 처리된다.\n\n8개 서사 구간에 걸쳐 초기 이벤트가 단 하나도 손실 없이\n보존되어 있다. Turn 5의 간판 설치 씬,\nTurn 14의 한결 첫 등장 모두 여전히 정확하다.\n\n<strong style="color:var(--uncached)">희원의 등장</strong>은 새 복선으로 즉시 태깅되어\n다음 큐레이션(Turn 60)에서 추적이 이어진다.\n\n<strong style="color:var(--cached)">50턴이 지나도 서사는 끊기지 않는다.</strong>`
+  }
+];
+
+function switchSim(idx) {
+  document.querySelectorAll('.snap-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  const d = simData[idx];
+  document.getElementById('sim-why').innerHTML = d.why;
+  document.getElementById('sim-md').textContent = d.md;
+  document.getElementById('sim-analysis').innerHTML = d.analysis.replace(/\n/g, '<br>');
+}
+switchSim(0);
+
+// ── SNAP TABS ──
+function switchSnap(idx, el) {
+  document.querySelectorAll('.snap-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.snap-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+}
+
+// ── STAB ANIMATOR ──
+const stabStates = [
+  {
+    label: "Turn 1: 최초 시스템 — canonical 저장",
+    turns: [
+      {title:"Turn 1", items:[
+        {label:"system", val:"[오리지널 system + Lorebook A]", cls:"val-create"},
+        {label:"action", val:"→ canonical로 저장", cls:"val-cached"},
+        {label:"delta", val:"(없음)", cls:""},
+        {label:"캐시", val:"miss (첫 턴)", cls:"val-miss"},
+      ]},
+    ]
+  },
+  {
+    label: "Turn 2: Lorebook B 추가 — delta 추출, system 복원",
+    turns: [
+      {title:"Turn 1", items:[
+        {label:"canonical", val:"[오리지널 system + Lorebook A]", cls:"val-cached"},
+        {label:"캐시", val:"BP1 히트", cls:"val-cached"},
+      ]},
+      {title:"Turn 2", items:[
+        {label:"RisuAI system", val:"[오리지널 + Lorebook A + B]", cls:"val-create"},
+        {label:"delta 추출", val:"Lorebook B만", cls:"val-create"},
+        {label:"system 복원", val:"→ canonical (A만)", cls:"val-cached"},
+        {label:"캐시", val:"BP1 히트 ✓", cls:"val-cached"},
+      ]},
+    ]
+  },
+  {
+    label: "Turn N: 캐릭터 교체 — Jaccard < 0.30, canonical 교체",
+    turns: [
+      {title:"Turn N-1", items:[
+        {label:"canonical", val:"[캐릭터 A system]", cls:"val-cached"},
+        {label:"캐시", val:"BP1 히트", cls:"val-cached"},
+      ]},
+      {title:"Turn N", items:[
+        {label:"RisuAI system", val:"[완전히 다른 캐릭터 B]", cls:"val-miss"},
+        {label:"Jaccard", val:"< 0.30 → 교체", cls:"val-miss"},
+        {label:"신규 canonical", val:"[캐릭터 B system]", cls:"val-create"},
+        {label:"캐시", val:"miss (불가피)", cls:"val-miss"},
+      ]},
+    ]
+  },
+];
+let stabIdx = 0;
+function renderStab() {
+  const stage = document.getElementById('stab-stage');
+  const desc = document.getElementById('stab-desc');
+  const state = stabStates[stabIdx];
+  desc.textContent = state.label;
+  stage.innerHTML = state.turns.map(t => `
+    <div class="anim-turn highlighted">
+      <div class="anim-turn-title">${t.title}</div>
+      ${t.items.map(i => `
+        <div class="anim-row">
+          <span class="anim-label">${i.label}</span>
+          <span class="anim-val ${i.cls}">${i.val}</span>
+        </div>`).join('')}
+    </div>`).join('');
+}
+function stabNext() { stabIdx = (stabIdx + 1) % stabStates.length; renderStab(); }
+function stabPrev() { stabIdx = (stabIdx + stabStates.length - 1) % stabStates.length; renderStab(); }
+renderStab();
+
+</script>
+</body>
+</html>
